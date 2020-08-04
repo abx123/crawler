@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
+	"github.com/aws/aws-lambda-go/lambda"
 )
 
 type chapter struct {
@@ -21,19 +22,13 @@ type chapter struct {
 	Chapter string `json:"chapter"`
 }
 
-type Request struct {
-	ID    float64 `json="id"`
-	Value syting  `json="value"`
-}
-
 type Response struct {
 	Message string `json:"message"`
 	Ok      bool   `json:"ok"`
 }
 
 func main() {
-	// lambda.Start(Handler)
-	Handler()
+	lambda.Start(Handler)
 }
 
 func Handler() (Response, error) {
@@ -61,7 +56,7 @@ func Handler() (Response, error) {
 	fmt.Println(fmt.Sprintf("Finished crawling for MGA, added %d chapters", len(latestChapters)))
 
 	return Response{
-		Message: fmt.Sprintf("Process Request ID %f", request.ID),
+		Message: "ok",
 		Ok:      true,
 	}, nil
 }
