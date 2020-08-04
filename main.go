@@ -21,9 +21,14 @@ type chapter struct {
 	Chapter string `json:"chapter"`
 }
 
+type Request struct {
+	ID    float64 `json="id"`
+	Value syting  `json="value"`
+}
+
 type Response struct {
 	Message string `json:"message"`
-	ok      bool   `json:"ok"`
+	Ok      bool   `json:"ok"`
 }
 
 func main() {
@@ -37,7 +42,7 @@ func Handler() (Response, error) {
 	if err != nil {
 		return Response{
 			Message: err.Error(),
-			ok:      false,
+			Ok:      false,
 		}, err
 	}
 	var latest int64
@@ -48,7 +53,7 @@ func Handler() (Response, error) {
 	if latestErr != nil {
 		return Response{
 			Message: latestErr.Error(),
-			ok:      false,
+			Ok:      false,
 		}, latestErr
 	}
 	getChapter(latestChapters)
@@ -56,8 +61,8 @@ func Handler() (Response, error) {
 	fmt.Println(fmt.Sprintf("Finished crawling for MGA, added %d chapters", len(latestChapters)))
 
 	return Response{
-		Message: "ok",
-		ok:      true,
+		Message: fmt.Sprintf("Process Request ID %f", request.ID),
+		Ok:      true,
 	}, nil
 }
 
