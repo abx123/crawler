@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"regexp"
 	"sort"
 	"strconv"
@@ -138,7 +139,7 @@ func save(chapters []chapter) error {
 		if err != nil {
 			return err
 		}
-		resp2, err := http.Post("https://hooks.slack.com/services/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", "application/json", bytes.NewBuffer(req))
+		resp2, err := http.Post(os.Getenv("SLACK"), "application/json", bytes.NewBuffer(req))
 		if err != nil {
 			return err
 		}
