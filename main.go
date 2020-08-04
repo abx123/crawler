@@ -51,8 +51,20 @@ func Handler() (Response, error) {
 			Ok:      false,
 		}, latestErr
 	}
-	getChapter(latestChapters)
-	save(latestChapters)
+	getErr := getChapter(latestChapters)
+	if getErr != nil {
+		return Response{
+			Message: getErr.Error(),
+			Ok:      false,
+		}, getErr
+	}
+	saveErr := save(latestChapters)
+	if saveErr != nil {
+		return Response{
+			Message: saveErr.Error(),
+			Ok:      false,
+		}, saveErr
+	}
 	fmt.Println(fmt.Sprintf("Finished crawling for MGA, added %d chapters", len(latestChapters)))
 
 	return Response{
@@ -91,33 +103,48 @@ func sanitize(title string, input string) string {
 	return o[0]
 }
 
-func getChapter(chapters []chapter) {
+func getChapter(chapters []chapter) error {
 	for _, chapter := range chapters {
-		doc, _ := goquery.NewDocument("https://novelfull.com" + chapter.Link)
+		doc, err := goquery.NewDocument("https://novelfull.com" + chapter.Link)
+		if err != nil {
+			return err
+		}
 		doc.Find("div#chapter-content").Each(func(index int, item *goquery.Selection) {
 			chapter.Text = sanitize(chapter.Title, item.Text())
 		})
+		return nil
 	}
 }
 
-func save(chapters []chapter) {
+func save(chapters []chapter) error {
 	for _, chapter := range chapters {
-		requestBody, _ := json.Marshal(map[string]string{
+		requestBody, err := json.Marshal(map[string]string{
 			"title":   chapter.Title,
 			"text":    chapter.Text,
 			"read":    "false",
 			"chapter": chapter.Chapter,
 		})
-		resp, _ := http.Post("https://novel-fac48.firebaseio.com/novels/MGA.json", "application/json", bytes.NewBuffer(requestBody))
+		if err != nil {
+			return err
+		}
+		resp, err := http.Post("https://novel-fac48.firebaseio.com/novels/MGA.json", "application/json", bytes.NewBuffer(requestBody))
+		if err != nil {
+			return err
+		}
 		defer resp.Body.Close()
-
-		req, _ := json.Marshal(map[string]string{
+		req, err := json.Marshal(map[string]string{
 			"text": fmt.Sprintf("Added MGA Chapter %s \n", chapter.Title),
 		})
-		resp2, _ := http.Post("https://hooks.slack.com/services/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", "application/json", bytes.NewBuffer(req))
+		if err != nil {
+			return err
+		}
+		resp2, err := http.Post("https://hooks.slack.com/services/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", "application/json", bytes.NewBuffer(req))
+		if err != nil {
+			return err
+		}
 		defer resp2.Body.Close()
 		fmt.Printf("Added MGA Chapter %s \n", chapter.Title)
-
+		return nil
 	}
 }
 
