@@ -112,8 +112,8 @@ func getChapter(chapters []chapter) error {
 		doc.Find("div#chapter-content").Each(func(index int, item *goquery.Selection) {
 			chapter.Text = sanitize(chapter.Title, item.Text())
 		})
-		return nil
 	}
+	return nil
 }
 
 func save(chapters []chapter) error {
@@ -144,8 +144,8 @@ func save(chapters []chapter) error {
 		}
 		defer resp2.Body.Close()
 		fmt.Printf("Added MGA Chapter %s \n", chapter.Title)
-		return nil
 	}
+	return nil
 }
 
 func getExistingChapters() ([]chapter, error) {
