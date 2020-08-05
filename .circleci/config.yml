@@ -5,7 +5,7 @@ jobs:
   build_project:
     working_directory: ~/circle-ci-s3-deploy
     docker:
-      - image: node:10.15.3
+      - image: circleci/golang:1.9
     steps:
       - checkout
       - run: 
