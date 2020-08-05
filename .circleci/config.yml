@@ -1,29 +1,52 @@
- version: 2
+version: 2.1
+orbs:
+  aws-cli: circleci/aws-cli@0.1.18
+jobs:
+  build_project:
+    working_directory: ~/circle-ci-s3-deploy
+    docker:
+      - image: node:10.15.3
+    steps:
+      - checkout
+      - run: 
+          name: Installing dependencies
+          command: yarn
+      - run: 
+          name: Building project
+          command: yarn build
+      - persist_to_workspace:
+          root: .
+          paths:
+            - .
 
- workflows: # Define a Workflow running the build job, then the deploy job
-   version: 2
-   build-deploy:
-     jobs:
-       - build
-       - deploy:
-           requires:
-             - build
-           filters:
-             branches:
-               only: master # Only deploys when the commit is on the Master branch
+  deploy_project:
+    executor: aws-cli/default
+    steps:
+      - attach_workspace:
+          at: .
+      - aws-cli/setup:
+          profile-name: default
+      - run:
+          name: Upload file to S3
+          command: aws s3 sync ./outputs/ s3://my-tf-crawler-test-bucket --delete
 
- jobs:
-   build:
-     docker: # Specify executor for running build job - this example uses a Docker container
-       - image: 'circleci/node:lts' # Specify docker image to use
-   ... # build job steps omitted for brevity
-   deploy:
-     docker: # Specify executor for running deploy job
-       - image: 'circleci/node:lts' # Specify docker image to use
-     steps:
-       - run: # Install the AWS CLI if it is not already included in the docker image
-           name: Install awscli 
-           command: sudo pip install awscli
-       - run: # Deploy to S3 using the sync command
-           name: Deploy to S3
-           command: aws s3 sync <path/to/bucket> <s3://location/in/S3-to-deploy-to
+workflows:
+  version: 2
+  build:
+    jobs:
+      - build_project:
+          filters:
+              branches:
+                ignore: /.*/
+              tags:
+                only: /.*/
+
+      - deploy_project:
+          requires:
+            - build_project
+          context: aws-context
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /.*/
