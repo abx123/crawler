@@ -8,9 +8,12 @@ jobs:
       - image: circleci/golang:1.9
     steps:
       - checkout
-      # - run: 
-      #     name: Installing dependencies
-      #     command: yarn
+      - run: 
+          name: Installing dependencies
+          command: go get -u github.com/aws/aws-lambda-go/cmd/build-lambda-zip
+      - run: 
+          name: Installing dependencies 2
+          command: go get -u github.com/aws/aws-lambda-go
       - run: 
           name: Building project
           command: bash ./build.ps1
