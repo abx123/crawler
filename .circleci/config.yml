@@ -1,26 +1,30 @@
 version: 2.1
-orbs:
-  s3: ngs/s3-deploy@0.0.1
-jobs:
-  build:
-    executor: ...
-    steps:
-      - checkout
-      - make
-      - persist_to_workspace:
-          root: .
-          paths:
-            - outputs
-workflows:
-  main:
-    jobs:
-      - build
-      - s3/deploy:
-          requires:
-            - build
-          filters:
-            branches:
-              only: master
-          workspace: .
-          artifacts: outputs
-          bucket: my-tf-crawler-test-bucket
+ orbs:
+   aws-s3: circleci/aws-s3@x.y.z # use the AWS S3 orb in your config
+
+ workflows: # Define a Workflow running the build job, then the deploy job
+   version: 2
+   build-deploy: # Make a workflow to build and deploy your project
+     jobs:
+       - build
+       - deploy:
+           requires:
+             - build # Only run deploy job once the build job has completed
+           filters:
+             branches:
+               only: master # Only deploy when the commit is on the Master branch
+
+ jobs: # Define the build and deploy jobs
+   build:
+     docker: # Use the Docker executor for the build job
+       - image: 'circleci/node:lts' # Specify the Docker image to use for the build job
+   ... # build job steps omitted for brevity
+   deploy:
+     docker: # Use the Docker executor for the deploy job
+       - image: 'circleci/node:lts'  # Specify the Docker image to use for the deploy job
+   steps:
+       - checkout
+       - aws-s3/sync:
+           from: bucket
+           to: 's3://my-tf-crawler-test-bucket/test'
+           overwrite: true # default is false
