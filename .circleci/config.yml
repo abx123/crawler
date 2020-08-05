@@ -1,30 +1,29 @@
-version: 2.1
- orbs:
-   aws-s3: circleci/aws-s3@x.y.z # use the AWS S3 orb in your config
+ version: 2
 
  workflows: # Define a Workflow running the build job, then the deploy job
    version: 2
-   build-deploy: # Make a workflow to build and deploy your project
+   build-deploy:
      jobs:
        - build
        - deploy:
            requires:
-             - build # Only run deploy job once the build job has completed
+             - build
            filters:
              branches:
-               only: master # Only deploy when the commit is on the Master branch
+               only: master # Only deploys when the commit is on the Master branch
 
- jobs: # Define the build and deploy jobs
+ jobs:
    build:
-     docker: # Use the Docker executor for the build job
-       - image: 'circleci/node:lts' # Specify the Docker image to use for the build job
+     docker: # Specify executor for running build job - this example uses a Docker container
+       - image: 'circleci/node:lts' # Specify docker image to use
    ... # build job steps omitted for brevity
    deploy:
-     docker: # Use the Docker executor for the deploy job
-       - image: 'circleci/node:lts'  # Specify the Docker image to use for the deploy job
-   steps:
-       - checkout
-       - aws-s3/sync:
-           from: bucket
-           to: 's3://my-tf-crawler-test-bucket/test'
-           overwrite: true # default is false
+     docker: # Specify executor for running deploy job
+       - image: 'circleci/node:lts' # Specify docker image to use
+     steps:
+       - run: # Install the AWS CLI if it is not already included in the docker image
+           name: Install awscli 
+           command: sudo pip install awscli
+       - run: # Deploy to S3 using the sync command
+           name: Deploy to S3
+           command: aws s3 sync <path/to/bucket> <s3://location/in/S3-to-deploy-to
