@@ -34,19 +34,19 @@ workflows:
   version: 2
   build:
     jobs:
-      - build_project:
-          filters:
-              branches:
-                ignore: /.*/
-              tags:
-                only: /.*/
+      - build_project
+          # filters:
+          #     branches:
+          #       ignore: /.*/
+          #     tags:
+          #       only: /.*/
 
       - deploy_project:
           requires:
             - build_project
-          context: aws-context
-          filters:
-            branches:
-              ignore: /.*/
-            tags:
-              only: /.*/
+          context: aws
+          # filters:
+          #   branches:
+          #     ignore: /.*/
+          #   tags:
+          #     only: /.*/
