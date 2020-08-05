@@ -8,9 +8,9 @@ jobs:
       - image: circleci/golang:1.9
     steps:
       - checkout
-      - run: 
-          name: Installing dependencies
-          command: yarn
+      # - run: 
+      #     name: Installing dependencies
+      #     command: yarn
       - run: 
           name: Building project
           command: bash ./build.ps1
