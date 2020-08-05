@@ -1,0 +1,26 @@
+version: 2.1
+orbs:
+  s3: ngs/s3-deploy@0.0.1
+jobs:
+  build:
+    executor: ...
+    steps:
+      - checkout
+      - make
+      - persist_to_workspace:
+          root: .
+          paths:
+            - outputs
+workflows:
+  main:
+    jobs:
+      - build
+      - s3/deploy:
+          requires:
+            - build
+          filters:
+            branches:
+              only: master
+          workspace: .
+          artifacts: outputs
+          bucket: my-tf-crawler-test-bucket
