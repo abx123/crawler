@@ -31,7 +31,7 @@ jobs:
           profile-name: default
       - run:
           name: Upload file to S3
-          command: aws s3 sync . s3://my-tf-crawler-test-bucket/outputs --delete
+          command: aws s3 sync ./main.zip s3://my-tf-crawler-test-bucket/outputs --delete
 
 workflows:
   version: 2
