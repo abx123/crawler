@@ -16,7 +16,7 @@ jobs:
           command: go get -u github.com/aws/aws-lambda-go
       - run: 
           name: Building project
-          command: bash ./build.ps1
+          command: bash ./ci-build.ps1
       - persist_to_workspace:
           root: .
           paths:
