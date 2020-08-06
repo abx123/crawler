@@ -31,7 +31,7 @@ jobs:
           profile-name: default
       - run:
           name: Upload file to S3
-          command: aws s3 cp ./outputsmain.zip s3://my-tf-crawler-test-bucket/outputs_test/outputsmain.zip
+          command: aws s3 cp ./main.zip s3://my-tf-crawler-test-bucket/outputs/main.zip
 
 workflows:
   version: 2
