@@ -143,7 +143,6 @@ func save(chapters []chapter) error {
 		if err != nil {
 			return err
 		}
-		fmt.Println("resp2:", resp2)
 		defer resp2.Body.Close()
 		fmt.Printf("Added MGA Chapter %s \n", chapter.Title)
 	}
