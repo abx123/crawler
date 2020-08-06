@@ -1,2 +1,3 @@
 GOOS=linux go build main.go
-zip main.zip main
+mkdir outputs
+zip outputs\main.zip main
