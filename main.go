@@ -52,14 +52,14 @@ func Handler() (Response, error) {
 			Ok:      false,
 		}, latestErr
 	}
-	getErr := getChapter(latestChapters)
+	chapters, getErr := getChapter(latestChapters)
 	if getErr != nil {
 		return Response{
 			Message: getErr.Error(),
 			Ok:      false,
 		}, getErr
 	}
-	saveErr := save(latestChapters)
+	saveErr := save(chapters)
 	if saveErr != nil {
 		return Response{
 			Message: saveErr.Error(),
@@ -104,17 +104,19 @@ func sanitize(title string, input string) string {
 	return o[0]
 }
 
-func getChapter(chapters []chapter) error {
+func getChapter(chapters []chapter) ([]chapter, error) {
+	var resp []chapter
 	for _, chapter := range chapters {
 		doc, err := goquery.NewDocument("https://novelfull.com" + chapter.Link)
 		if err != nil {
-			return err
+			return resp, err
 		}
 		doc.Find("div#chapter-content").Each(func(index int, item *goquery.Selection) {
 			chapter.Text = sanitize(chapter.Title, item.Text())
+			resp = append(resp, chapter)
 		})
 	}
-	return nil
+	return resp, nil
 }
 
 func save(chapters []chapter) error {
