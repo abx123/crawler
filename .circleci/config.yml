@@ -24,7 +24,6 @@ jobs:
             - .
       - run: exit 0
       - slack/status:
-          fail_only: true
           mentions: 'U016L9P8X19'
           webhook: webhook
 
@@ -39,7 +38,6 @@ jobs:
           name: Upload file to S3
           command: aws s3 cp ./main.zip s3://my-tf-crawler-test-bucket/outputs/main.zip
       - slack/status:
-          fail_only: true
           mentions: 'U016L9P8X19'
           webhook: webhook
 
