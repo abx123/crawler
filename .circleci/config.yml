@@ -1,6 +1,7 @@
 version: 2.1
 orbs:
   aws-cli: circleci/aws-cli@0.1.18
+  slack: circleci/slack@x.y.z
 jobs:
   build_project:
     working_directory: ~/circle-ci-s3-deploy
@@ -21,6 +22,12 @@ jobs:
           root: .
           paths:
             - .
+      - run: exit 0
+      - slack/status:
+          fail_only: true
+          mentions: 'U016L9P8X19'
+          only_for_branches: 'MASTER'
+          webhook: webhook
 
   deploy_project:
     executor: aws-cli/default
