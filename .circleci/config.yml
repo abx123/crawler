@@ -24,7 +24,9 @@ jobs:
             - .
       - run: exit 0
       - slack/status:
-          mentions: 'U016L9P8X19'
+          mentions: 'A018EEQR020'
+          success_message: ':bb-dance::bb-panggang-loh::bb-ok::pet-bb-head::bb-begging:'
+          failure_message: ':bb-no::bb-panggang-no-cry::bb-emo-bb-cry::bb-cry-till-flood:'
 
   deploy_project:
     executor: aws-cli/default
@@ -37,7 +39,9 @@ jobs:
           name: Upload file to S3
           command: aws s3 cp ./main.zip s3://my-tf-crawler-test-bucket/outputs/main.zip
       - slack/status:
-          mentions: 'U016L9P8X19'
+          mentions: 'A018EEQR020'
+          success_message: ':bb-dance::bb-panggang-loh::bb-ok::pet-bb-head::bb-begging:'
+          failure_message: ':bb-no::bb-panggang-no-cry::bb-emo-bb-cry::bb-cry-till-flood:'
 
 workflows:
   version: 2
