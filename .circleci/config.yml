@@ -25,7 +25,6 @@ jobs:
       - run: exit 0
       - slack/status:
           mentions: 'U016L9P8X19'
-          webhook: webhook
 
   deploy_project:
     executor: aws-cli/default
@@ -39,7 +38,6 @@ jobs:
           command: aws s3 cp ./main.zip s3://my-tf-crawler-test-bucket/outputs/main.zip
       - slack/status:
           mentions: 'U016L9P8X19'
-          webhook: webhook
 
 workflows:
   version: 2
