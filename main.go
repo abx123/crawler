@@ -85,7 +85,6 @@ func getLatestChapters(currentChapter int64) ([]chapter, error) {
 		link, _ := item.Attr("href")
 		chap := re.FindAllString(item.Text(), -1)[0]
 		curChap, _ := strconv.ParseInt(chap, 10, 64)
-		fmt.Println("cur:", curChap, "latest:", currentChapter)
 		if curChap > currentChapter {
 			latestChapters = append(latestChapters, chapter{
 				Title:   item.Text(),
