@@ -6,21 +6,19 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"os"
 	"regexp"
 	"sort"
 	"strconv"
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
-	"github.com/aws/aws-lambda-go/lambda"
 )
 
 type chapter struct {
 	Title   string `json:"title"`
 	Text    string `json:"text"`
 	Link    string `json:"link"`
-	Chapter string `json:"chapter"`
+	Chapter int64  `json:"chapter"`
 }
 
 type Response struct {
@@ -43,7 +41,7 @@ func Handler() (Response, error) {
 	}
 	var latest int64
 	if len(existingChapters) > 0 {
-		latest, _ = strconv.ParseInt(existingChapters[0].Chapter, 10, 64)
+		latest = existingChapters[0].Chapter
 	}
 	latestChapters, latestErr := getLatestChapters(latest)
 	if latestErr != nil {
@@ -85,11 +83,12 @@ func getLatestChapters(currentChapter int64) ([]chapter, error) {
 		link, _ := item.Attr("href")
 		chap := re.FindAllString(item.Text(), -1)[0]
 		curChap, _ := strconv.ParseInt(chap, 10, 64)
+		fmt.Println("cur:", curChap, "latest:", currentChapter)
 		if curChap > currentChapter {
 			latestChapters = append(latestChapters, chapter{
 				Title:   item.Text(),
 				Link:    link,
-				Chapter: chap,
+				Chapter: curChap,
 			})
 		}
 	})
@@ -120,13 +119,12 @@ func getChapter(chapters []chapter) ([]chapter, error) {
 }
 
 func save(chapters []chapter) error {
+	sort.Slice(chapters, func(i, j int) bool {
+		return chapters[i].Chapter < chapters[j].Chapter
+	})
+
 	for _, chapter := range chapters {
-		requestBody, err := json.Marshal(map[string]string{
-			"title":   chapter.Title,
-			"text":    chapter.Text,
-			"read":    "false",
-			"chapter": chapter.Chapter,
-		})
+		requestBody, err := json.Marshal(chapter)
 		if err != nil {
 			return err
 		}
@@ -136,7 +134,7 @@ func save(chapters []chapter) error {
 		}
 		defer resp.Body.Close()
 		req, err := json.Marshal(map[string]string{
-			"text": fmt.Sprintf("Added MGA Chapter %s \n", chapter.Title),
+			"text": fmt.Sprintf("Added MGA %s \n", chapter.Title),
 		})
 		if err != nil {
 			return err
@@ -169,9 +167,7 @@ func getExistingChapters() ([]chapter, error) {
 		chapterList = append(chapterList, chapter)
 	}
 	sort.Slice(chapterList, func(i, j int) bool {
-		chapi, _ := strconv.ParseInt(chapterList[i].Chapter, 10, 64)
-		chapj, _ := strconv.ParseInt(chapterList[j].Chapter, 10, 64)
-		return chapi > chapj
+		return chapterList[i].Chapter > chapterList[j].Chapter
 	})
 	return chapterList, nil
 }
