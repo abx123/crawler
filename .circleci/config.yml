@@ -37,7 +37,7 @@ jobs:
           profile-name: default
       - run:
           name: Upload file to S3
-          command: aws s3 cp ./main.zip s3://lambda-bucket/crawler/main.zip
+          command: aws s3 cp ./main.zip s3://my-tf-lambda-bucket/crawler/main.zip
       - slack/status:
           mentions: 'A018EEQR020'
           success_message: '[${PROJECT_ENV_VAR}]Deploy success! :bb-dance::pet-bb-head::bb-begging:'
