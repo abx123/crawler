@@ -2,9 +2,10 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"log"
 	"net/http"
 	"os"
 	"regexp"
@@ -12,8 +13,16 @@ import (
 	"strconv"
 	"strings"
 
+	firebase "firebase.google.com/go"
+	"firebase.google.com/go/db"
 	"github.com/PuerkitoBio/goquery"
-	"github.com/aws/aws-lambda-go/lambda"
+	"google.golang.org/api/option"
+)
+
+var client *db.Client
+
+var (
+	URL = make(map[string]string)
 )
 
 type chapter struct {
@@ -29,56 +38,75 @@ type Response struct {
 	Ok      bool   `json:"ok"`
 }
 
-func main() {
-	lambda.Start(Handler)
+func Init() {
+	ctx := context.Background()
+	conf := &firebase.Config{
+		DatabaseURL: "https://novel-fac48.firebaseio.com",
+	}
+	opt := option.WithCredentialsFile("cred/firebase.json")
+
+	app, err := firebase.NewApp(ctx, conf, opt)
+	if err != nil {
+		log.Fatalf("firebase.NewApp: %v", err)
+	}
+	client, err = app.Database(ctx)
+	if err != nil {
+		log.Fatalf("app.Firestore: %v", err)
+	}
+
+	URL["MGA"] = "https://novelfull.com/martial-god-asura.html"
+	URL["MYBWH"] = "https://novelfull.com/my-youth-began-with-him.html"
 }
 
-func Handler() (Response, error) {
-	fmt.Println("Start crawling for MGA")
-	existingChapters, err := getExistingChapters()
+func main() {
+	Init()
+	resp, err := Handler()
+	fmt.Println(resp, err)
+}
+
+func crawl(novel string) error {
+	fmt.Println("Start crawling for " + novel)
+	latestChapter, err := getLatestChapter(novel)
 	if err != nil {
-		return Response{
-			Message: err.Error(),
-			Ok:      false,
-		}, err
+		return err
 	}
-	var latest int64
-	if len(existingChapters) > 0 {
-		latest = existingChapters[0].Chapter
-	}
-	latestChapters, latestErr := getLatestChapters(latest)
+	latestChapters, latestErr := crawlLatestChapters(latestChapter, novel)
 	if latestErr != nil {
-		return Response{
-			Message: latestErr.Error(),
-			Ok:      false,
-		}, latestErr
+		return latestErr
 	}
 	chapters, getErr := getChapter(latestChapters)
 	if getErr != nil {
-		return Response{
-			Message: getErr.Error(),
-			Ok:      false,
-		}, getErr
+		return getErr
 	}
-	saveErr := save(chapters)
+	saveErr := save(chapters, novel)
 	if saveErr != nil {
-		return Response{
-			Message: saveErr.Error(),
-			Ok:      false,
-		}, saveErr
+		return saveErr
 	}
-	fmt.Println(fmt.Sprintf("Finished crawling for MGA, added %d chapters", len(latestChapters)))
+	fmt.Println(fmt.Sprintf("Finished crawling for %s, added %d chapters", novel, len(latestChapters)))
+	return nil
+}
 
+func Handler() (Response, error) {
+	for key, _ := range URL {
+		err := crawl(key)
+		if err != nil {
+			return Response{
+				Message: err.Error(),
+				Ok:      false,
+			}, err
+		}
+	}
 	return Response{
 		Message: "ok",
 		Ok:      true,
 	}, nil
 }
 
-func getLatestChapters(currentChapter int64) ([]chapter, error) {
+func crawlLatestChapters(latestChapter int64, novel string) ([]chapter, error) {
+
 	var latestChapters []chapter
 	re := regexp.MustCompile("[0-9]+")
-	doc, err := goquery.NewDocument("https://novelfull.com/martial-god-asura.html")
+	doc, err := goquery.NewDocument(URL[novel])
 	if err != nil {
 		return nil, err
 	}
@@ -86,12 +114,12 @@ func getLatestChapters(currentChapter int64) ([]chapter, error) {
 		link, _ := item.Attr("href")
 		chap := re.FindAllString(item.Text(), -1)[0]
 		curChap, _ := strconv.ParseInt(chap, 10, 64)
-		if curChap > currentChapter {
+		if curChap > latestChapter {
 			latestChapters = append(latestChapters, chapter{
 				Title:   item.Text(),
 				Link:    link,
 				Chapter: curChap,
-				Novel:   "MGA",
+				Novel:   novel,
 			})
 		}
 	})
@@ -121,23 +149,17 @@ func getChapter(chapters []chapter) ([]chapter, error) {
 	return resp, nil
 }
 
-func save(chapters []chapter) error {
+func save(chapters []chapter, novel string) error {
 	sort.Slice(chapters, func(i, j int) bool {
 		return chapters[i].Chapter < chapters[j].Chapter
 	})
-
 	for _, chapter := range chapters {
-		requestBody, err := json.Marshal(chapter)
-		if err != nil {
+		ref := client.NewRef("novels/" + novel + "/" + strconv.FormatInt(chapter.Chapter, 10))
+		if err := ref.Set(context.Background(), chapter); err != nil {
 			return err
 		}
-		resp, err := http.Post("https://novel-fac48.firebaseio.com/novels/MGA.json", "application/json", bytes.NewBuffer(requestBody))
-		if err != nil {
-			return err
-		}
-		defer resp.Body.Close()
 		req, err := json.Marshal(map[string]string{
-			"text": fmt.Sprintf("Added MGA %s \n", chapter.Title),
+			"text": fmt.Sprintf("Added %s %s \n", novel, chapter.Title),
 		})
 		if err != nil {
 			return err
@@ -147,30 +169,17 @@ func save(chapters []chapter) error {
 			return err
 		}
 		defer resp2.Body.Close()
-		fmt.Printf("Added MGA Chapter %s \n", chapter.Title)
+		fmt.Printf("Added %s Chapter %s \n", novel, chapter.Title)
 	}
 	return nil
 }
 
-func getExistingChapters() ([]chapter, error) {
-	var test map[string]chapter
-	var chapterList []chapter
-	resp, err := http.Get("https://novel-fac48.firebaseio.com/novels/MGA.json")
-	defer resp.Body.Close()
-	if err != nil {
-		return nil, err
+func getLatestChapter(novel string) (int64, error) {
+	q := client.NewRef("novels/" + novel).OrderByChild("chapter").LimitToLast(1)
+	result, err := q.GetOrdered(context.Background())
+	if err != nil || len(result) == 0 {
+		return 0, err
 	}
-
-	b, readErr := ioutil.ReadAll(resp.Body)
-	if readErr != nil {
-		return nil, readErr
-	}
-	json.Unmarshal(b, &test)
-	for _, chapter := range test {
-		chapterList = append(chapterList, chapter)
-	}
-	sort.Slice(chapterList, func(i, j int) bool {
-		return chapterList[i].Chapter > chapterList[j].Chapter
-	})
-	return chapterList, nil
+	latestChapter, _ := strconv.ParseInt(result[0].Key(), 10, 64)
+	return latestChapter, nil
 }
