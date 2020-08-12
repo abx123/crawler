@@ -21,6 +21,7 @@ type chapter struct {
 	Text    string `json:"text"`
 	Link    string `json:"link"`
 	Chapter int64  `json:"chapter"`
+	Novel   string `json:"novel"`
 }
 
 type Response struct {
@@ -90,6 +91,7 @@ func getLatestChapters(currentChapter int64) ([]chapter, error) {
 				Title:   item.Text(),
 				Link:    link,
 				Chapter: curChap,
+				Novel:   "MGA",
 			})
 		}
 	})
