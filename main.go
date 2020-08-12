@@ -16,6 +16,7 @@ import (
 	firebase "firebase.google.com/go"
 	"firebase.google.com/go/db"
 	"github.com/PuerkitoBio/goquery"
+	"github.com/aws/aws-lambda-go/lambda"
 	"google.golang.org/api/option"
 )
 
@@ -71,8 +72,7 @@ func Init() {
 
 func main() {
 	Init()
-	resp, err := Handler()
-	fmt.Println(resp, err)
+	lambda.Start(Handler)
 }
 
 func crawl(novel string) error {
