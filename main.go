@@ -159,7 +159,7 @@ func save(chapters []chapter, novel string) error {
 			return err
 		}
 		req, err := json.Marshal(map[string]string{
-			"text": fmt.Sprintf("Added %s %s \n > https://novelfull.com%s", novel, chapter.Title, chapter.Link),
+			"text": fmt.Sprintf("Added %s %s \n >https://novelfull.com%s", novel, chapter.Title, chapter.Link),
 		})
 		if err != nil {
 			return err
