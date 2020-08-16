@@ -44,19 +44,8 @@ func Init() {
 	conf := &firebase.Config{
 		DatabaseURL: "https://novel-fac48.firebaseio.com",
 	}
-	opt := option.WithCredentialsJSON([]byte(`{
-		"type": "service_account",
-		"project_id": "novel-fac48",
-		"private_key_id": "f75f7a985b9972e38834bb6771f3596d03c1c0ab",
-		"private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQC84TbsXWp6i/p2\nMm2UYtiqE/8hbR8Xf4Lpk4B3IpeWTfXzlzjyRVG/Tso/wyjdNHG4VkNFQ0d94sIs\najHA0sCval2Q2u8k0owVVn5+RdVt50kX06mSa+LkWdbTXra3uZFPWncMb3FL+jTP\naMb7eq0UvJ9w1NX7hhLuC4xeS559GYbuDvXvfnVLwVUlmZfF//XNZhOBNZAokv1f\ntVnqJFXAQYc7hdjTixxUge/Ka2hVb32L2WWRVZfqYlnQTKWChU+jrvX2G2HR/itK\nFDlE7kFtNtyJ+qx20bSPgtUoMYtzr9t5U+Dsk89AKOTAX5EgAZKrFuMPMJs04w+m\n6mCZ2YsPAgMBAAECggEAI7cwhAx8DHU4pK4Pc34ney2x0jfIp9BYSGO4aI61fFn8\nlpWzUniSJys2ak00hnOax2Ekck3xEFhXID/qbYxMnD7wN2p2yw83JvfGjokU/SW9\neBBxobrd2hE04p4nzeD8nbU9CrBuC5Bh+RBWhAoj/WZXfeX5Gok1PicX4WLKMtxT\nZucVFP2GSFo4LvDcryrjQlj3jaJYZW/doV1EQlgzXgDD10Gud3nIs/1er42rnXyi\nCxzsduNh3RgiPK71Lx0gdyxgTbPOxcdUbcbpFyuZGa7sDD3SoiquL8VuwAyc6wOO\n97XYRiAhlmN+wLdxOvDsLCxdM2t95cyYCaDbepAibQKBgQD8fKVHpGi5oS/G9I+X\nKWaE+o+8WICIyVuLgdz4cN7JzqEcbueUHlwXm54yN1GS1Gdq755z5ZrZJIQ4/M9E\no/dcp/1qxHY72+J796bOFl51BcCkluqCCwsGsl3+5G3D+1tJcYMrb9FUBag0b5Vu\n7JEVoU/UCqfSnYb8H51p6Xuv3QKBgQC/ggBRGEPN6NdOJkaG2DSfXumDSBvfT5gP\nK3057sNOW/LoC9SIDGfK1XUoDluYGzHKSwaTROtjh05YFtHB4FB1wrZwqFTU81kl\nvWLAcdb9TiqA42WhBvMtxEeqU4Tglk4a3yJGqN2hpr9CAnjt8IFk9a/vXUPqKgzD\nu9XRgb1t2wKBgQCKORqqm+ERLqLfQmeRk4KibiFeNP045TMOrqtv/yqYRFyDGlwB\nBJXZ/sGeMBaiUVHEgyW1wQ8CrTENmalGpJT4zqa3WpJ3tqrIvw08aZaQbfPGpy/+\nvVjt85vtvNQypFqXXGM41mA8pVQuUJ/4N949fzAanzK85KxPPmeI4d9qqQKBgQCE\nN73+PzF49TvJIdXpfVX/fijcUamkqLBEMPNZTwYakJMJMDnA4Ee8m1kymY8VWhkr\nIFdez+NwKNenK8IQB82lMBSDfURsbcJrsvB+C1qyMghYSic9YK3+OBh+eQExibRN\nCyb//9BcreI4MbrKFBVR3epk6VBdWEDN1l5OMjPVpwKBgGc/R6ByKgJD2k1FUhR2\nNH5ygq4jJdZklZCfaekrOpabFan1m8e0dog9uU++UHLDK6uh0URg/20TZNHfNC8D\nPvsy/9pzazIks4aQPvzH9y0R+t3uERUgd1g8xD+Ccl07bgq+5IH9vZENVUM76bSB\nVYiy10FvU3n3Z7RcSMod90m8\n-----END PRIVATE KEY-----\n",
-		"client_email": "firebase-adminsdk-cabau@novel-fac48.iam.gserviceaccount.com",
-		"client_id": "101950008019101536286",
-		"auth_uri": "https://accounts.google.com/o/oauth2/auth",
-		"token_uri": "https://oauth2.googleapis.com/token",
-		"auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
-		"client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-cabau%40novel-fac48.iam.gserviceaccount.com"
-	  }
-	  `))
+	opt := option.WithCredentialsJSON([]byte(os.Getenv("FIREBASE")))
+
 	app, err := firebase.NewApp(ctx, conf, opt)
 	if err != nil {
 		log.Fatalf("firebase.NewApp: %v", err)
@@ -170,7 +159,7 @@ func save(chapters []chapter, novel string) error {
 			return err
 		}
 		req, err := json.Marshal(map[string]string{
-			"text": fmt.Sprintf("Added %s %s \n", novel, chapter.Title),
+			"text": fmt.Sprintf("Added %s %s \n > https://novelfull.com/%s", novel, chapter.Title, chapter.Link),
 		})
 		if err != nil {
 			return err
