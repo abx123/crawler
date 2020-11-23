@@ -57,6 +57,7 @@ func Init() {
 
 	URL["MGA"] = "https://novelfull.com/martial-god-asura.html"
 	URL["MYBWH"] = "https://novelfull.com/my-youth-began-with-him.html"
+	URL["ROTSSG"] = "https://novelfull.com/reincarnation-of-the-strongest-sword-god.html"
 }
 
 func main() {
